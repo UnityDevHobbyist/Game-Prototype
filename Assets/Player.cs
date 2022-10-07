@@ -7,14 +7,12 @@ public class Player : MonoBehaviour
     Rigidbody m_Rigidbody;
     [SerializeField]private float m_Speed = 5f;
     Vector3 newRotation;
-    bool crouching = false;
-    bool isGrounded = false;
+    bool crouching;
+    bool isGrounded;
     int turn = 0;
     public Camera cam;
-    public MeshRenderer playerCrouchrenderer;
-    public MeshRenderer playerRenderer;
 
-    void Start()
+    void CursorSettings()
     {
         //Fetch the Rigidbody from the GameObject with this script attached
         m_Rigidbody = GetComponent<Rigidbody>();
@@ -22,7 +20,7 @@ public class Player : MonoBehaviour
         Cursor.visible = false;
     }
 
-    void Update()
+    void TreeClimbing()
     {
         RaycastHit hit;
         if (Physics.Raycast(transform.position, transform.forward, out hit, 1f))
@@ -33,35 +31,40 @@ public class Player : MonoBehaviour
                 m_Rigidbody.velocity = new Vector3(0, 5, 0);
             }
         }
+    }
 
+    void IsGrounded()
+    {
         isGrounded = Physics.Raycast(transform.position, Vector3.down, 1.1f);
-
-        //Detect when the C arrow key is pressed down
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            newRotation = new Vector3(-90, transform.eulerAngles.y, transform.eulerAngles.z);
-            transform.eulerAngles = newRotation;
-            crouching = true;
-        }
-            
-
-        //Detect when the C arrow key has been released
-        if (Input.GetKeyUp(KeyCode.C))
-        {
-            newRotation = new Vector3(0, transform.eulerAngles.y, transform.eulerAngles.z);
-            transform.eulerAngles = newRotation;
-            crouching = false;
-        }
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
             if (!crouching && isGrounded)
             {
-               //Apply a force to this Rigidbody in direction of this GameObjects up axis
-               m_Rigidbody.AddForce(transform.up * 300, ForceMode.Acceleration);
+                //Apply a force to this Rigidbody in direction of this GameObjects up axis
+                m_Rigidbody.AddForce(transform.up * 300, ForceMode.Acceleration);
             }
         }
+    }
 
+    void Turning()
+    {
+        if (Input.GetKey(KeyCode.A))
+        {
+            turn = -1;
+        }
+        else if (Input.GetKey(KeyCode.D))
+        {
+            turn = 1;
+        }
+        else
+        {
+            turn = 0;
+        }
+    }
+
+    void SpeedStates()
+    {
         if (crouching)
         {
             m_Speed = 2.5f;
@@ -75,19 +78,40 @@ public class Player : MonoBehaviour
         {
             m_Speed = 7.5f;
         }
+    }
 
-        if (Input.GetKey(KeyCode.A))
+    void Crouching()
+    {
+        //Detect when the C arrow key is pressed down
+        if (Input.GetKeyDown(KeyCode.C))
         {
-            turn = -1;
+            newRotation = new Vector3(-90, transform.eulerAngles.y, transform.eulerAngles.z);
+            transform.eulerAngles = newRotation;
+            crouching = true;
         }
-        else if (Input.GetKey(KeyCode.D))
+
+
+        //Detect when the C arrow key has been released
+        if (Input.GetKeyUp(KeyCode.C))
         {
-            turn = 1;
+            newRotation = new Vector3(0, transform.eulerAngles.y, transform.eulerAngles.z);
+            transform.eulerAngles = newRotation;
+            crouching = false;
         }
-        else
-        {
-            turn = 0;
-        }
+    }
+
+    void Start()
+    {
+        CursorSettings();
+    }
+
+    void Update()
+    {
+        TreeClimbing();
+        IsGrounded();
+        Turning();
+        SpeedStates();
+        //Crouching();
     }
 
     void MovePlayer()
@@ -111,16 +135,5 @@ public class Player : MonoBehaviour
     {
         MovePlayer();
         RotatePlayer();
-
-        if (crouching)
-        {
-            playerCrouchrenderer.enabled = true;
-            playerRenderer.enabled = false;
-        }
-        else
-        {
-            playerCrouchrenderer.enabled = false;
-            playerRenderer.enabled = true;
-        }
     }
 }
