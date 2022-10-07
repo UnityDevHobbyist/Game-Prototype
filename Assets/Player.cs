@@ -6,9 +6,13 @@ public class Player : MonoBehaviour
 {
     Rigidbody m_Rigidbody;
     [SerializeField]private float m_Speed = 5f;
-    Vector3 newRotation = new Vector3(0, 0, 0);
+    Vector3 newRotation;
     bool crouching = false;
     bool isGrounded = false;
+    int turn = 0;
+    public Camera cam;
+    public MeshRenderer playerCrouchrenderer;
+    public MeshRenderer playerRenderer;
 
     void Start()
     {
@@ -29,17 +33,13 @@ public class Player : MonoBehaviour
                 m_Rigidbody.velocity = new Vector3(0, 5, 0);
             }
         }
-        else
-        {
-
-        }
 
         isGrounded = Physics.Raycast(transform.position, Vector3.down, 1.1f);
 
         //Detect when the C arrow key is pressed down
         if (Input.GetKeyDown(KeyCode.C))
         {
-            newRotation = new Vector3(-90, 0, 0);
+            newRotation = new Vector3(-90, transform.eulerAngles.y, transform.eulerAngles.z);
             transform.eulerAngles = newRotation;
             crouching = true;
         }
@@ -48,7 +48,7 @@ public class Player : MonoBehaviour
         //Detect when the C arrow key has been released
         if (Input.GetKeyUp(KeyCode.C))
         {
-            newRotation = new Vector3(0, 0, 0);
+            newRotation = new Vector3(0, transform.eulerAngles.y, transform.eulerAngles.z);
             transform.eulerAngles = newRotation;
             crouching = false;
         }
@@ -75,15 +75,52 @@ public class Player : MonoBehaviour
         {
             m_Speed = 7.5f;
         }
+
+        if (Input.GetKey(KeyCode.A))
+        {
+            turn = -1;
+        }
+        else if (Input.GetKey(KeyCode.D))
+        {
+            turn = 1;
+        }
+        else
+        {
+            turn = 0;
+        }
     }
 
-    void FixedUpdate()
+    void MovePlayer()
     {
         //Store user input as a movement vector
-        Vector3 m_Input = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+        Vector3 m_Input = transform.forward * Input.GetAxis("Vertical");
 
         //Apply the movement vector to the current position, which is
         //multiplied by deltaTime and speed for a smooth MovePosition
         m_Rigidbody.MovePosition(transform.position + m_Input * Time.deltaTime * m_Speed);
+
+        cam.transform.position = transform.position - transform.forward * 10;
+    }
+
+    void RotatePlayer()
+    {
+        transform.RotateAround(transform.position, transform.up, 100 * turn * Time.deltaTime);
+    }
+
+    void FixedUpdate()
+    {
+        MovePlayer();
+        RotatePlayer();
+
+        if (crouching)
+        {
+            playerCrouchrenderer.enabled = true;
+            playerRenderer.enabled = false;
+        }
+        else
+        {
+            playerCrouchrenderer.enabled = false;
+            playerRenderer.enabled = true;
+        }
     }
 }
