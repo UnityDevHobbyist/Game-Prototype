@@ -111,7 +111,7 @@ public class Player : MonoBehaviour
         IsGrounded();
         Turning();
         SpeedStates();
-        //Crouching();
+        Crouching();
     }
 
     void MovePlayer()
